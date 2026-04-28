@@ -32,6 +32,8 @@ navbar:
         href: articles/quickstart.html
       - text: Python environments
         href: articles/python-environments.html
+      - text: Token highlighting
+        href: articles/token-highlighting.html
       - text: Ragnar reranking
         href: articles/rerank-ragnar.html
       - text: Skald stores
@@ -107,6 +109,7 @@ articles:
   contents:
   - quickstart
   - python-environments
+  - token-highlighting
 - title: Workflows
   navbar: Workflows
   contents:

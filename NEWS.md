@@ -2,6 +2,8 @@
 
 * Adds token-level relevance tables and HTML highlighting for ColBERT
   query/document interactions.
+* Adds a token-highlighting vignette using an R4DS-style data transformation
+  example.
 * Uses reticulate managed Python environments on load, matching ragnar's
   environment management pattern.
 * Initial development version.

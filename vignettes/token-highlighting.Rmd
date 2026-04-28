@@ -1,0 +1,113 @@
+---
+title: "Token highlighting"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Token highlighting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Late-interaction models score a document by matching each query token to its
+best document token. `skald_token_relevance()` exposes those token-level
+matches, and `skald_token_highlight()` renders them as HTML.
+
+## Compute relevance
+
+This is the live workflow against the R4DS data transformation chapter:
+
+```{r, eval = FALSE}
+library(dplyr)
+library(ragnar)
+library(skald)
+
+model <- skald_model("lightonai/GTE-ModernColBERT-v1", device = "cpu")
+
+query <- "How do I keep rows with filter?"
+
+r4ds_chunks <- "https://r4ds.hadley.nz/data-transform.html" |>
+  ragnar::read_as_markdown() |>
+  ragnar::markdown_chunk() |>
+  tibble::as_tibble()
+
+candidates <- r4ds_chunks |>
+  filter(grepl("filter", text, ignore.case = TRUE)) |>
+  slice_head(n = 3)
+
+token_scores <- skald_token_relevance(
+  model,
+  query = query,
+  documents = candidates$text,
+  document_id = seq_len(nrow(candidates))
+)
+```
+
+`token_scores` is a tibble with one row per document token. The most important
+columns are:
+
+- `score`: raw best query-token similarity for the document token.
+- `score_scaled`: display scale in `[0, 1]`.
+- `best_query_token`: query token that best matched this document token.
+- `selected_by_query`: whether at least one query token selected this document
+  token under MaxSim.
+
+## Render highlights
+
+The package site uses a small deterministic R4DS-style excerpt so the article
+can render without downloading a model. The object has the same columns returned
+by `skald_token_relevance()`.
+
+```{r}
+library(skald)
+
+r4ds_excerpt <- paste(
+  "The R4DS data transformation chapter introduces filter() as a way to keep",
+  "rows that satisfy a logical condition. This makes it useful when a question",
+  "asks how to subset observations before summarising or plotting data."
+)
+
+r4ds_token_scores <- tibble::tribble(
+  ~token,          ~score, ~score_scaled, ~best_query_token, ~selected_by_query,
+  "filter()",       0.92,          1.00,  "filter",          TRUE,
+  "keep",           0.78,          0.78,  "keep",            TRUE,
+  "rows",           0.73,          0.69,  "rows",            TRUE,
+  "logical",        0.61,          0.47,  "with",            FALSE,
+  "condition",      0.66,          0.56,  "filter",          FALSE,
+  "subset",         0.84,          0.86,  "keep",            TRUE,
+  "observations",   0.57,          0.40,  "rows",            FALSE
+)
+
+loc <- vapply(
+  r4ds_token_scores$token,
+  function(token) regexpr(token, r4ds_excerpt, fixed = TRUE)[[1]],
+  integer(1)
+)
+
+r4ds_token_scores <- dplyr::mutate(
+  r4ds_token_scores,
+  document_id = "r4ds-data-transform",
+  document = r4ds_excerpt,
+  token_start = loc,
+  token_end = loc + nchar(.data$token) - 1L,
+  .before = 1
+)
+
+htmltools::tags$div(
+  style = "max-width: 72ch; font-size: 1.05rem; line-height: 1.8;",
+  skald_token_highlight(r4ds_token_scores)
+)
+```
+
+Hover over a highlighted token to see its raw score and best matching query
+token.
+
+```{r}
+r4ds_token_scores |>
+  dplyr::select(token, score, score_scaled, best_query_token, selected_by_query)
+```
