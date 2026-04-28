@@ -27,3 +27,15 @@ test_that("Python requirements are formatted without printing", {
     "numpy, pylate>=1.4.0,<1.5; python: >=3.10"
   )
 })
+
+test_that("PyLate package requirement strings include extras", {
+  expect_equal(
+    skald:::.skald_python_packages(),
+    "pylate>=1.4.0,<1.5"
+  )
+
+  expect_equal(
+    skald:::.skald_python_packages(extras = c("eval", "voyager")),
+    "pylate[eval,voyager]>=1.4.0,<1.5"
+  )
+})

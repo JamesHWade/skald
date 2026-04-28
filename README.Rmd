@@ -41,8 +41,10 @@ You can install the development version from GitHub:
 pak::pak("JamesHWade/skald")
 ```
 
-skald uses reticulate's Python requirement system. Configure PyLate before
-Python is initialized when you need a specific environment:
+Like ragnar, skald uses reticulate's managed Python environment support. When
+the package loads, it sets `RETICULATE_PYTHON = "managed"` and records the
+PyLate requirement with `reticulate::py_require()`. Run setup to force an
+environment check before loading a model:
 
 ```r
 library(skald)

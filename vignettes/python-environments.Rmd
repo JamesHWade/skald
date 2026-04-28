@@ -15,9 +15,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-skald uses `reticulate::py_require()` to declare the Python requirements for
-PyLate. This keeps package loading lightweight and lets reticulate resolve a
-compatible Python environment when needed.
+skald follows ragnar's reticulate pattern for Python environments. On package
+load, skald sets `RETICULATE_PYTHON = "managed"` and calls
+`reticulate::py_require()` to declare the Python requirements for PyLate. This
+keeps package loading lightweight and lets reticulate resolve or create a
+compatible managed Python environment when needed.
 
 ## Default requirements
 
@@ -57,8 +59,10 @@ Call the sitrep before debugging model downloads or GPU behavior.
 
 `skald_configure()` is the lower-level wrapper around `reticulate::py_require()`.
 It records requirements for reticulate but does not necessarily install or
-import Python packages immediately. Use it when you need manual control over
-requirement actions:
+import Python packages immediately. This matches the reticulate/ragnar model:
+requirements are declared first, and the managed environment is resolved when
+Python is initialized. Use it when you need manual control over requirement
+actions:
 
 ```{r}
 skald_configure(action = "add")

@@ -1,12 +1,26 @@
 .local <- new.env(parent = emptyenv())
 .local$bridge <- NULL
 
+.skald_python_packages <- function(version_spec = ">=1.4.0,<1.5", extras = character()) {
+  if (length(extras)) {
+    sprintf("pylate[%s]%s", paste(extras, collapse = ","), version_spec)
+  } else {
+    sprintf("pylate%s", version_spec)
+  }
+}
+
+.skald_use_managed_python <- function() {
+  Sys.setenv(RETICULATE_PYTHON = "managed")
+  invisible("managed")
+}
+
 .onLoad <- function(libname, pkgname) {
+  .skald_use_managed_python()
   .skald_register_print_methods()
 
   tryCatch(
     reticulate::py_require(
-      packages = "pylate>=1.4.0,<1.5",
+      packages = .skald_python_packages(),
       python_version = ">=3.10"
     ),
     error = function(e) {
@@ -26,11 +40,7 @@ skald_configure <- function(
 ) {
   action <- rlang::arg_match(action, c("add", "remove", "set"))
 
-  pkg <- if (length(extras)) {
-    sprintf("pylate[%s]%s", paste(extras, collapse = ","), version_spec)
-  } else {
-    sprintf("pylate%s", version_spec)
-  }
+  pkg <- .skald_python_packages(version_spec, extras)
 
   reticulate::py_require(
     packages = pkg,
@@ -47,11 +57,12 @@ skald_setup <- function(
   extras = character(),
   python_version = ">=3.10",
   exclude_newer = NULL,
-  action = "set",
+  action = "add",
   check = TRUE
 ) {
   action <- rlang::arg_match(action, c("add", "remove", "set"))
   python_initialized <- reticulate::py_available(initialize = FALSE)
+  managed <- .skald_use_managed_python()
 
   pkg <- skald_configure(
     version_spec = version_spec,
@@ -63,6 +74,7 @@ skald_setup <- function(
 
   cli::cli_h1("skald setup")
   cli::cli_bullets(c(
+    "v" = "Using reticulate managed Python via {.envvar RETICULATE_PYTHON} = {.val {managed}}.",
     "v" = "Requested Python package {.pkg {pkg}}.",
     "v" = "Requested Python version {.val {python_version}}."
   ))

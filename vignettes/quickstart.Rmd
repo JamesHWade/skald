@@ -21,8 +21,10 @@ and retrieval.
 
 ## Configure Python
 
-Call `skald_setup()` before Python is initialized if you need to control and
-check the active PyLate requirements.
+Like ragnar, skald uses reticulate's managed Python environment support. The
+package sets `RETICULATE_PYTHON = "managed"` on load and records PyLate with
+`reticulate::py_require()`. Call `skald_setup()` to force an environment check
+before loading a model.
 
 ```{r}
 library(skald)
