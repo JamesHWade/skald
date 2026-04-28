@@ -21,14 +21,14 @@ and retrieval.
 
 ## Configure Python
 
-Call `skald_configure()` before Python is initialized if you need to control
-the active PyLate requirements.
+Call `skald_setup()` before Python is initialized if you need to control and
+check the active PyLate requirements.
 
 ```{r}
 library(skald)
 
-skald_configure()
-skald_diagnostics()
+skald_setup()
+skald_sitrep()
 ```
 
 ## Create a model

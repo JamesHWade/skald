@@ -14,3 +14,16 @@ test_that("Python config values are scalar strings", {
     "a, b"
   )
 })
+
+test_that("Python requirements are formatted without printing", {
+  reqs <- list(
+    python_version = ">=3.10",
+    packages = c("numpy", "pylate>=1.4.0,<1.5"),
+    exclude_newer = NULL
+  )
+
+  expect_equal(
+    skald:::.skald_python_requirements_value(reqs),
+    "numpy, pylate>=1.4.0,<1.5; python: >=3.10"
+  )
+})

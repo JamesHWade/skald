@@ -35,8 +35,8 @@ before Python is initialized when you need a specific environment:
 ``` r
 library(skald)
 
-skald_configure()
-skald_diagnostics()
+skald_setup()
+skald_sitrep()
 ```
 
 ## Rerank ragnar results

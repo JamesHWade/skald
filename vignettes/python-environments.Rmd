@@ -24,7 +24,7 @@ compatible Python environment when needed.
 ```{r}
 library(skald)
 
-skald_configure()
+skald_setup()
 ```
 
 The default requirement is `pylate>=1.4.0,<1.5` with Python 3.10 or newer.
@@ -40,13 +40,27 @@ skald_configure(extras = "voyager")
 
 ## Diagnostics
 
-`skald_diagnostics()` reports R, reticulate, Python, PyLate, torch, transformer,
-and device information.
+`skald_sitrep()` prints R, reticulate, Python, PyLate, torch, transformer, and
+device information. `skald_diagnostics()` returns the same information as a
+structured list for scripts and bug reports.
 
 ```{r}
+skald_sitrep()
 skald_diagnostics()
 skald_torch_devices()
 skald_check_install()
 ```
 
-Call diagnostics before debugging model downloads or GPU behavior.
+Call the sitrep before debugging model downloads or GPU behavior.
+
+## Manual configuration
+
+`skald_configure()` is the lower-level wrapper around `reticulate::py_require()`.
+It records requirements for reticulate but does not necessarily install or
+import Python packages immediately. Use it when you need manual control over
+requirement actions:
+
+```{r}
+skald_configure(action = "add")
+skald_configure(action = "set")
+```

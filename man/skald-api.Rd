@@ -23,6 +23,8 @@
 \alias{skald_retrieve}
 \alias{skald_retrieve_ragnar}
 \alias{skald_retriever}
+\alias{skald_setup}
+\alias{skald_sitrep}
 \alias{skald_score_matrix}
 \alias{skald_score_pairwise}
 \alias{skald_store_build_index}

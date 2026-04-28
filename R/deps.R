@@ -42,6 +42,63 @@ skald_configure <- function(
   invisible(pkg)
 }
 
+skald_setup <- function(
+  version_spec = ">=1.4.0,<1.5",
+  extras = character(),
+  python_version = ">=3.10",
+  exclude_newer = NULL,
+  action = "set",
+  check = TRUE
+) {
+  action <- rlang::arg_match(action, c("add", "remove", "set"))
+  python_initialized <- reticulate::py_available(initialize = FALSE)
+
+  pkg <- skald_configure(
+    version_spec = version_spec,
+    extras = extras,
+    python_version = python_version,
+    exclude_newer = exclude_newer,
+    action = action
+  )
+
+  cli::cli_h1("skald setup")
+  cli::cli_bullets(c(
+    "v" = "Requested Python package {.pkg {pkg}}.",
+    "v" = "Requested Python version {.val {python_version}}."
+  ))
+
+  if (isTRUE(python_initialized)) {
+    cli::cli_warn(c(
+      "Python is already initialized in this R session.",
+      "i" = "New reticulate requirements may not affect the active Python environment.",
+      "i" = "Restart R before calling {.fun skald_setup} if you need reticulate to resolve a different environment."
+    ))
+  }
+
+  if (!isTRUE(check)) {
+    cli::cli_inform(c(
+      "i" = "Skipping import checks because {.code check = FALSE}.",
+      "i" = "Run {.fun skald_sitrep} to inspect the active environment."
+    ))
+    return(invisible(pkg))
+  }
+
+  diagnostics <- skald_sitrep()
+  pylate <- diagnostics$install[diagnostics$install$package == "pylate", , drop = FALSE]
+
+  if (nrow(pylate) && isTRUE(pylate$available[[1]])) {
+    cli::cli_bullets(c("v" = "Python package {.pkg pylate} is available."))
+  } else {
+    cli::cli_warn(c(
+      "Python package {.pkg pylate} is not available in the active environment.",
+      "i" = "If Python was already initialized, restart R and run {.fun skald_setup} before loading other Python-backed packages.",
+      "i" = "Run {.fun skald_sitrep} to inspect the active Python environment."
+    ))
+  }
+
+  invisible(diagnostics)
+}
+
 skald_py_mod <- function(name = NULL) {
   key <- if (is.null(name)) "pylate" else paste0("pylate.", name)
 
@@ -51,8 +108,8 @@ skald_py_mod <- function(name = NULL) {
       error = function(e) {
         cli::cli_abort(c(
           "Could not import Python package {.pkg {key}}.",
-          "i" = "Run {.code skald_diagnostics()} to inspect the active Python environment.",
-          "i" = "Run {.code skald_configure()} before Python is initialized to change requirements.",
+          "i" = "Run {.code skald_sitrep()} to inspect the active Python environment.",
+          "i" = "Run {.code skald_setup()} in a fresh R session to configure and check requirements.",
           "i" = "For CPU-only PyTorch wheels, set {.env UV_INDEX} before loading skald."
         ), parent = e)
       }
@@ -199,10 +256,17 @@ skald_check_install <- function() {
 }
 
 skald_diagnostics <- function() {
-  reqs <- tryCatch(
-    utils::capture.output(reticulate::py_require()),
-    error = function(e) conditionMessage(e)
-  )
+  .skald_collect_diagnostics()
+}
+
+skald_sitrep <- function() {
+  diagnostics <- .skald_collect_diagnostics()
+  .skald_print_sitrep(diagnostics)
+  invisible(diagnostics)
+}
+
+.skald_collect_diagnostics <- function() {
+  reqs <- .skald_python_requirements()
 
   versions <- tibble::tibble(
     field = c(
@@ -225,7 +289,7 @@ skald_diagnostics <- function() {
       .skald_python_version("sentence-transformers"),
       .skald_python_version("transformers"),
       .skald_python_version("fast-plaid"),
-      paste(reqs, collapse = "\n")
+      .skald_python_requirements_value(reqs)
     )
   )
 
@@ -238,6 +302,99 @@ skald_diagnostics <- function() {
     torch_devices = devices,
     install = skald_check_install()
   )
+}
+
+.skald_python_requirements <- function() {
+  tryCatch(
+    reticulate::py_require(),
+    error = function(e) structure(
+      list(error = conditionMessage(e)),
+      class = "skald_python_requirements_error"
+    )
+  )
+}
+
+.skald_python_requirements_value <- function(reqs) {
+  if (inherits(reqs, "skald_python_requirements_error")) {
+    return(reqs$error %||% NA_character_)
+  }
+
+  packages <- reqs$packages %||% character()
+  python_version <- reqs$python_version %||% NA_character_
+  exclude_newer <- reqs$exclude_newer %||% NA_character_
+
+  parts <- c(
+    if (length(packages)) paste(packages, collapse = ", ") else "packages: <none>",
+    if (!is.na(python_version)) paste0("python: ", python_version),
+    if (!is.na(exclude_newer)) paste0("exclude_newer: ", exclude_newer)
+  )
+
+  paste(parts, collapse = "; ")
+}
+
+.skald_print_sitrep <- function(diagnostics) {
+  cli::cli_h1("skald sitrep")
+
+  cli::cli_h2("R")
+  .skald_cli_field(diagnostics$versions, "R version")
+  .skald_cli_field(diagnostics$versions, "skald version")
+  .skald_cli_field(diagnostics$versions, "reticulate version")
+
+  cli::cli_h2("Python")
+  .skald_cli_field(diagnostics$python, "python")
+  .skald_cli_field(diagnostics$python, "version")
+  .skald_cli_field(diagnostics$python, "numpy")
+  .skald_cli_field(diagnostics$versions, "active reticulate requirements")
+
+  cli::cli_h2("Python packages")
+  package_lines <- character(nrow(diagnostics$install))
+  for (i in seq_len(nrow(diagnostics$install))) {
+    row <- diagnostics$install[i, , drop = FALSE]
+    status <- if (isTRUE(row$available[[1]])) "v" else "x"
+    version <- row$version[[1]]
+    error <- row$error[[1]]
+    detail <- if (!is.na(version)) {
+      version
+    } else if (!is.na(error)) {
+      .skald_one_line(error)
+    } else {
+      "not found"
+    }
+
+    package_lines[[i]] <- sprintf("{.pkg %s}: %s", row$package[[1]], detail)
+    names(package_lines)[[i]] <- status
+  }
+  cli::cli_bullets(package_lines)
+
+  cli::cli_h2("Devices")
+  device_lines <- character(nrow(diagnostics$torch_devices))
+  for (i in seq_len(nrow(diagnostics$torch_devices))) {
+    row <- diagnostics$torch_devices[i, , drop = FALSE]
+    status <- if (isTRUE(row$available[[1]])) "v" else "x"
+    device_lines[[i]] <- sprintf("%s: %s", row$device[[1]], row$detail[[1]])
+    names(device_lines)[[i]] <- status
+  }
+  cli::cli_bullets(device_lines)
+
+  invisible(diagnostics)
+}
+
+.skald_cli_field <- function(data, field) {
+  value <- data$value[data$field == field]
+  if (!length(value)) {
+    value <- NA_character_
+  }
+
+  value <- .skald_one_line(value[[1]])
+  cli::cli_bullets(c("*" = "{.field {field}}: {.val {value}}"))
+}
+
+.skald_one_line <- function(x) {
+  if (is.null(x) || is.na(x)) {
+    return("<unknown>")
+  }
+
+  gsub("\\s+", " ", as.character(x))
 }
 
 skald_index_status <- function(x) {

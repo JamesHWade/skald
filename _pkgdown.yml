@@ -45,6 +45,8 @@ reference:
 - title: Python setup and diagnostics
   desc: Configure and inspect the Python backend used by skald.
   contents:
+  - skald_setup
+  - skald_sitrep
   - skald_configure
   - skald_diagnostics
   - skald_python_config
