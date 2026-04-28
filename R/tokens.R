@@ -1,3 +1,27 @@
+#' Compute token-level relevance
+#'
+#' Scores document tokens by their best matching query token, exposing the
+#' token-level late interactions used by ColBERT-style MaxSim scoring.
+#'
+#' @param model A [SkaldModel].
+#' @param query A single query string.
+#' @param documents Character vector of document strings.
+#' @param document_id Optional unique document identifiers. Defaults to row
+#'   positions.
+#' @param batch_size Encoding batch size.
+#' @param show_progress Whether PyLate should show progress output.
+#' @param scale Scaling used for `score_scaled`: per `"document"`, across the
+#'   `"corpus"`, or `"none"`.
+#' @param include_special Whether to keep prefix and special tokens in the
+#'   output.
+#' @param ... Additional arguments passed to [skald_encode_queries()] and
+#'   [skald_encode_documents()].
+#'
+#' @returns A tibble with one row per document token and columns describing raw
+#'   score, scaled score, best matching query token, and MaxSim selections.
+#' @export
+#' @examplesIf interactive()
+#' scores <- skald_token_relevance(model, "filter rows", "Use filter() to keep rows.")
 skald_token_relevance <- function(
   model,
   query,
@@ -98,6 +122,29 @@ skald_token_relevance <- function(
   out
 }
 
+#' Render token relevance as HTML highlights
+#'
+#' Converts output from [skald_token_relevance()] into lightweight HTML spans
+#' with opacity proportional to token relevance.
+#'
+#' @param relevance A token relevance tibble returned by
+#'   [skald_token_relevance()].
+#' @param color Hex color used for highlights.
+#' @param min_alpha,max_alpha Minimum and maximum highlight opacity.
+#'
+#' @returns An `htmltools` HTML object.
+#' @export
+#' @examplesIf requireNamespace("htmltools", quietly = TRUE)
+#' relevance <- tibble::tibble(
+#'   document_id = "doc",
+#'   document = "Use filter() to keep rows.",
+#'   token_start = c(5L, 17L),
+#'   token_end = c(12L, 20L),
+#'   score = c(0.9, 0.7),
+#'   score_scaled = c(1, 0.6),
+#'   best_query_token = c("filter", "rows")
+#' )
+#' skald_token_highlight(relevance)
 skald_token_highlight <- function(
   relevance,
   color = "#f59f00",

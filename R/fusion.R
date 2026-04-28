@@ -1,3 +1,21 @@
+#' Fuse ranking signals
+#'
+#' Combines multiple rank or score columns using reciprocal-rank fusion or a
+#' weighted normalized score sum.
+#'
+#' @param .data A data frame or tibble.
+#' @param ... <[`tidy-select`][tidyselect::language]> Rank or score columns to
+#'   fuse.
+#' @param method Fusion method, either `"rrf"` or `"weighted_sum"`.
+#' @param k Reciprocal-rank fusion constant.
+#' @param weights Optional numeric weights for selected columns.
+#' @param rank_col,score_col Names for output rank and score columns.
+#'
+#' @returns A tibble ordered by fused score, with fused score and rank columns.
+#' @export
+#' @examples
+#' results <- tibble::tibble(doc_id = 1:3, bm25_rank = c(1, 3, 2), late_score = c(0.2, 0.9, 0.6))
+#' skald_fuse_ranks(results, bm25_rank, late_score)
 skald_fuse_ranks <- function(
   .data,
   ...,

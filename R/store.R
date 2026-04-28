@@ -71,6 +71,25 @@
   DBI::dbDisconnect(con, shutdown = TRUE)
 }
 
+#' Create a skald store
+#'
+#' Creates a local store with DuckDB metadata and a PyLate PLAID index
+#' directory.
+#'
+#' @param location Store directory.
+#' @param model A [SkaldModel] or model specification to store in the manifest.
+#' @param overwrite Whether to replace an existing store directory.
+#' @param extra_cols Reserved for future metadata selection.
+#' @param name Optional short store name.
+#' @param title Optional human-readable store title.
+#' @param index_name Name of the PLAID index within the store.
+#' @param text_template Glue template used to construct embedding text.
+#' @param ... Reserved for future options.
+#'
+#' @returns A [SkaldStore] object.
+#' @export
+#' @examplesIf interactive()
+#' store <- skald_store_create("docs.skald", model, overwrite = TRUE)
 skald_store_create <- function(
   location = "docs.skald",
   model,
@@ -136,6 +155,20 @@ skald_store_create <- function(
   store
 }
 
+#' Connect to a skald store
+#'
+#' Opens an existing skald store manifest and returns an R handle to its metadata
+#' and PLAID index.
+#'
+#' @param location Store directory.
+#' @param model Optional [SkaldModel] or model specification overriding the
+#'   manifest model.
+#' @param read_only Whether the returned store should be read-only.
+#'
+#' @returns A [SkaldStore] object.
+#' @export
+#' @examplesIf interactive()
+#' store <- skald_store_connect("docs.skald")
 skald_store_connect <- function(location, model = NULL, read_only = TRUE) {
   manifest_path <- file.path(location, "manifest.json")
 
@@ -159,6 +192,24 @@ skald_store_connect <- function(location, model = NULL, read_only = TRUE) {
   )
 }
 
+#' Insert chunks into a skald store
+#'
+#' Normalizes text chunks and inserts or replaces their metadata in a
+#' [SkaldStore].
+#'
+#' @param store A writable [SkaldStore].
+#' @param chunks A data frame, tibble, character vector, or ragnar chunks object.
+#' @param ... Reserved for future options.
+#' @param text Optional <[`tidy-select`][tidyselect::language]> text column.
+#' @param context Optional <[`tidy-select`][tidyselect::language]> context column.
+#' @param origin Optional <[`tidy-select`][tidyselect::language]> origin column.
+#' @param batch Reserved for future batched insertion behavior.
+#'
+#' @returns Invisibly, `store`.
+#' @export
+#' @examplesIf interactive()
+#' chunks <- tibble::tibble(text = "Use filter() to keep rows.")
+#' skald_store_insert(store, chunks, text = text)
 skald_store_insert <- function(
   store,
   chunks,
@@ -338,6 +389,19 @@ skald_store_insert <- function(
   invisible(TRUE)
 }
 
+#' Build a store index
+#'
+#' Encodes unindexed chunks and writes them into the store's PLAID index.
+#'
+#' @param store A writable [SkaldStore].
+#' @param batch_size Encoding batch size.
+#' @param force Whether to rebuild all non-deleted chunks.
+#' @param ... Additional arguments passed to [skald_index_add()].
+#'
+#' @returns Invisibly, `store`.
+#' @export
+#' @examplesIf interactive()
+#' skald_store_build_index(store)
 skald_store_build_index <- function(store, batch_size = 32, force = FALSE, ...) {
   .skald_check_store(store)
 
@@ -389,6 +453,24 @@ skald_store_build_index <- function(store, batch_size = 32, force = FALSE, ...) 
   invisible(store)
 }
 
+#' Retrieve from a skald store
+#'
+#' Retrieves chunks from a [SkaldStore] using its stored model specification and
+#' PLAID index.
+#'
+#' @param store A [SkaldStore].
+#' @param query Query string or character vector of queries.
+#' @param top_k Number of results per query.
+#' @param ... Additional arguments passed to [skald_index_retrieve()].
+#' @param filter Optional data-masking expression evaluated against stored chunk
+#'   metadata before retrieval.
+#' @param deoverlap Reserved for parity with ragnar-style retrieval.
+#' @param include_text Whether to include text and context columns in results.
+#'
+#' @returns A tibble of retrieved chunks with late-interaction scores.
+#' @export
+#' @examplesIf interactive()
+#' skald_retrieve(store, "How do I filter rows?")
 skald_retrieve <- function(
   store,
   query,
@@ -469,10 +551,33 @@ skald_retrieve <- function(
   dplyr::left_join(chunks, wide, by = "chunk_uid")
 }
 
+#' Update chunks in a skald store
+#'
+#' Re-inserts chunks into a writable [SkaldStore], replacing rows with matching
+#' chunk identifiers.
+#'
+#' @inheritParams skald_store_insert
+#'
+#' @returns Invisibly, `store`.
+#' @export
+#' @examplesIf interactive()
+#' skald_store_update(store, chunks)
 skald_store_update <- function(store, chunks, ...) {
   skald_store_insert(store, chunks, ...)
 }
 
+#' Mark chunks as removed
+#'
+#' Marks chunks matching a filter expression as deleted in a writable
+#' [SkaldStore].
+#'
+#' @param store A writable [SkaldStore].
+#' @param filter Data-masking expression evaluated against stored chunk metadata.
+#'
+#' @returns Invisibly, `store`.
+#' @export
+#' @examplesIf interactive()
+#' skald_store_remove(store, chunk_id == 1)
 skald_store_remove <- function(store, filter) {
   .skald_check_store(store)
 

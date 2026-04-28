@@ -1,3 +1,30 @@
+#' Rerank candidate documents with a ColBERT model
+#'
+#' Reranks a data frame of first-stage candidate documents by late-interaction
+#' MaxSim score.
+#'
+#' @param .data A data frame or tibble of candidate documents.
+#' @param model A [SkaldModel].
+#' @param query Query string, or a column that resolves to one query string per
+#'   group.
+#' @param text <[`tidy-select`][tidyselect::language]> Text column to rerank.
+#' @param id Optional <[`tidy-select`][tidyselect::language]> column or columns
+#'   that identify candidate rows.
+#' @param query_id Optional <[`tidy-select`][tidyselect::language]> column or
+#'   columns that identify query groups.
+#' @param top_k Optional number of highest-ranked rows to keep per group.
+#' @param batch_size Encoding batch size.
+#' @param device Optional torch device string used during reranking.
+#' @param score_col,rank_col Names for the output score and rank columns.
+#' @param keep_all Whether to keep rows that are not returned by the reranker.
+#' @param ... Additional arguments passed to the PyLate `encode()` method.
+#'
+#' @returns A tibble with the original columns plus late-interaction score and
+#'   rank columns.
+#' @export
+#' @examplesIf interactive()
+#' candidates <- tibble::tibble(doc_id = "a", text = "Use filter() to keep rows.")
+#' skald_rerank(candidates, model, query = "filter rows", text = text, id = doc_id)
 skald_rerank <- function(
   .data,
   model,
@@ -203,6 +230,27 @@ skald_rerank <- function(
   )
 }
 
+#' Retrieve from ragnar and rerank with skald
+#'
+#' Runs `ragnar::ragnar_retrieve()` as a first-stage retriever and reranks the
+#' candidate chunks with a [SkaldModel].
+#'
+#' @param store A ragnar store object.
+#' @param model A [SkaldModel].
+#' @param query Query string.
+#' @param top_k Number of reranked results to return.
+#' @param candidate_k Number of first-stage ragnar candidates to retrieve.
+#' @param ... Additional arguments passed to `ragnar::ragnar_retrieve()`.
+#' @param deoverlap Whether to ask ragnar to deoverlap retrieved chunks.
+#' @param filter Optional ragnar filter expression.
+#' @param include_first_stage Whether to keep first-stage `rank` and `score`
+#'   columns when present.
+#'
+#' @returns A tibble of ragnar results with `late_score` and `late_rank`
+#'   columns.
+#' @export
+#' @examplesIf interactive()
+#' skald_retrieve_ragnar(store, model, query = "How do I filter rows?")
 skald_retrieve_ragnar <- function(
   store,
   model,

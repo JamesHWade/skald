@@ -1,3 +1,17 @@
+#' Score every query-document pair
+#'
+#' Computes ColBERT MaxSim scores for all query/document embedding pairs.
+#'
+#' @param query_embeddings Query embeddings, usually a [SkaldEmbeddings] object
+#'   from [skald_encode_queries()].
+#' @param document_embeddings Document embeddings, usually a [SkaldEmbeddings]
+#'   object from [skald_encode_documents()].
+#' @param queries_mask,documents_mask Optional token masks passed to PyLate.
+#'
+#' @returns A numeric matrix of query-by-document scores.
+#' @export
+#' @examplesIf interactive()
+#' skald_score_matrix(query_embeddings, document_embeddings)
 skald_score_matrix <- function(
   query_embeddings,
   document_embeddings,
@@ -19,6 +33,17 @@ skald_score_matrix <- function(
   as.matrix(reticulate::py_to_r(out))
 }
 
+#' Score corresponding query-document pairs
+#'
+#' Computes one ColBERT MaxSim score for each corresponding query/document
+#' embedding pair.
+#'
+#' @inheritParams skald_score_matrix
+#'
+#' @returns A numeric vector of pairwise scores.
+#' @export
+#' @examplesIf interactive()
+#' skald_score_pairwise(query_embeddings, document_embeddings)
 skald_score_pairwise <- function(query_embeddings, document_embeddings) {
   scores <- skald_py_mod("scores")
 

@@ -1,3 +1,22 @@
+#' Encode queries
+#'
+#' Encodes query strings into ColBERT token embeddings with the model's query
+#' prefix and query-length behavior.
+#'
+#' @param model A [SkaldModel].
+#' @param queries Character vector of query strings.
+#' @param batch_size Encoding batch size.
+#' @param show_progress Whether PyLate should show a progress bar.
+#' @param precision Embedding precision passed to PyLate.
+#' @param normalize_embeddings Whether to L2-normalize token embeddings.
+#' @param convert_to_numpy Whether PyLate should return NumPy arrays instead of
+#'   torch tensors.
+#' @param ... Additional arguments passed to the PyLate `encode()` method.
+#'
+#' @returns A [SkaldEmbeddings] object with `kind = "query"`.
+#' @export
+#' @examplesIf interactive()
+#' query_embeddings <- skald_encode_queries(model, "How do I filter rows?")
 skald_encode_queries <- function(
   model,
   queries,
@@ -33,6 +52,18 @@ skald_encode_queries <- function(
   )
 }
 
+#' Encode documents
+#'
+#' Encodes document strings into ColBERT token embeddings with the model's
+#' document prefix, skiplist, and document-length behavior.
+#'
+#' @inheritParams skald_encode_queries
+#' @param documents Character vector of document strings.
+#'
+#' @returns A [SkaldEmbeddings] object with `kind = "document"`.
+#' @export
+#' @examplesIf interactive()
+#' document_embeddings <- skald_encode_documents(model, c("Use filter() to keep rows."))
 skald_encode_documents <- function(
   model,
   documents,
@@ -68,6 +99,28 @@ skald_encode_documents <- function(
   )
 }
 
+#' Encode a data-frame column
+#'
+#' Encodes one text column and either appends a list-column of opaque Python
+#' embeddings or returns a [SkaldEmbeddings] object directly.
+#'
+#' @param .data A data frame or tibble.
+#' @param model A [SkaldModel].
+#' @param text <[`tidy-select`][tidyselect::language]> Column containing text to
+#'   encode.
+#' @param kind Embedding kind, either `"document"` or `"query"`.
+#' @param name Name of the output list-column. Use `NULL` to return only the
+#'   [SkaldEmbeddings] object.
+#' @param batch_size Encoding batch size.
+#' @param ... Additional arguments passed to [skald_encode_queries()] or
+#'   [skald_encode_documents()].
+#'
+#' @returns A tibble with an embedding list-column, or a [SkaldEmbeddings] object
+#'   when `name = NULL`.
+#' @export
+#' @examplesIf interactive()
+#' docs <- tibble::tibble(text = "Use filter() to keep rows.")
+#' skald_encode_col(docs, model, text)
 skald_encode_col <- function(
   .data,
   model,

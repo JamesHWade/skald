@@ -31,6 +31,22 @@
   invisible()
 }
 
+#' Configure Python package requirements
+#'
+#' Records the PyLate requirement with [reticulate::py_require()]. Like ragnar,
+#' skald uses reticulate managed Python environments.
+#'
+#' @param version_spec PyLate version requirement suffix.
+#' @param extras Optional PyLate extras, such as `"eval"` or `"voyager"`.
+#' @param python_version Python version requirement.
+#' @param exclude_newer Optional package date cutoff passed to
+#'   [reticulate::py_require()].
+#' @param action Requirement action. One of `"add"`, `"remove"`, or `"set"`.
+#'
+#' @returns Invisibly, the Python package requirement string.
+#' @export
+#' @examplesIf interactive()
+#' skald_configure()
 skald_configure <- function(
   version_spec = ">=1.4.0,<1.5",
   extras = character(),
@@ -52,6 +68,20 @@ skald_configure <- function(
   invisible(pkg)
 }
 
+#' Set up skald's Python environment
+#'
+#' Configures reticulate managed Python requirements and optionally checks the
+#' active Python environment.
+#'
+#' @inheritParams skald_configure
+#' @param check Whether to run [skald_sitrep()] and check that PyLate can be
+#'   imported.
+#'
+#' @returns Invisibly, diagnostics from [skald_sitrep()] when `check = TRUE`;
+#'   otherwise the package requirement string.
+#' @export
+#' @examplesIf interactive()
+#' skald_setup()
 skald_setup <- function(
   version_spec = ">=1.4.0,<1.5",
   extras = character(),
@@ -161,6 +191,15 @@ skald_bridge <- function() {
   )
 }
 
+#' Inspect the active Python configuration
+#'
+#' Returns the reticulate Python configuration as a scalar tibble suitable for
+#' diagnostics and bug reports.
+#'
+#' @returns A tibble with `field` and `value` columns.
+#' @export
+#' @examplesIf interactive()
+#' skald_python_config()
 skald_python_config <- function() {
   cfg <- tryCatch(reticulate::py_config(), error = identity)
 
@@ -215,6 +254,15 @@ skald_python_config <- function() {
   }
 }
 
+#' Inspect torch device availability
+#'
+#' Checks whether torch can use CUDA, Apple MPS, and the default device selected
+#' by skald.
+#'
+#' @returns A tibble with `device`, `available`, and `detail` columns.
+#' @export
+#' @examplesIf interactive()
+#' skald_torch_devices()
 skald_torch_devices <- function() {
   torch <- tryCatch(reticulate::import("torch", convert = TRUE), error = identity)
 
@@ -241,6 +289,16 @@ skald_torch_devices <- function() {
   )
 }
 
+#' Check Python package imports
+#'
+#' Attempts to import PyLate and its main runtime dependencies from the active
+#' reticulate Python environment.
+#'
+#' @returns A tibble with package availability, version, and import error
+#'   columns.
+#' @export
+#' @examplesIf interactive()
+#' skald_check_install()
 skald_check_install <- function() {
   packages <- c("pylate", "torch", "sentence_transformers", "transformers")
 
@@ -267,10 +325,29 @@ skald_check_install <- function() {
   dplyr::bind_rows(out)
 }
 
+#' Collect skald diagnostics
+#'
+#' Collects R, Python, package, and torch device diagnostics without printing a
+#' human-readable report.
+#'
+#' @returns A list with `versions`, `python`, `torch_devices`, and `install`
+#'   components.
+#' @export
+#' @examplesIf interactive()
+#' diagnostics <- skald_diagnostics()
 skald_diagnostics <- function() {
   .skald_collect_diagnostics()
 }
 
+#' Print a skald situation report
+#'
+#' Prints a human-readable report for the active R and Python environment and
+#' invisibly returns the same diagnostic data as [skald_diagnostics()].
+#'
+#' @returns Invisibly, a diagnostics list.
+#' @export
+#' @examplesIf interactive()
+#' skald_sitrep()
 skald_sitrep <- function() {
   diagnostics <- .skald_collect_diagnostics()
   .skald_print_sitrep(diagnostics)
@@ -409,6 +486,16 @@ skald_sitrep <- function() {
   gsub("\\s+", " ", as.character(x))
 }
 
+#' Inspect index or store status
+#'
+#' Reports basic status information for a [SkaldIndex] or [SkaldStore].
+#'
+#' @param x A [SkaldIndex] or [SkaldStore].
+#'
+#' @returns A tibble describing the index or store.
+#' @export
+#' @examplesIf interactive()
+#' skald_index_status(index)
 skald_index_status <- function(x) {
   if (S7::S7_inherits(x, SkaldStore)) {
     con <- .skald_store_connect_db(x, read_only = TRUE)

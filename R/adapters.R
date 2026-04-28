@@ -1,3 +1,23 @@
+#' Create a retriever closure
+#'
+#' Creates a function that retrieves context from a [SkaldStore] or retrieves
+#' first-stage ragnar results and reranks them with skald.
+#'
+#' @param store A [SkaldStore] or ragnar store object.
+#' @param model Optional [SkaldModel]. Required when `store` is a ragnar store.
+#' @param top_k Number of final results to return.
+#' @param candidate_k Number of first-stage candidates to rerank for ragnar
+#'   stores.
+#' @param format Output format, one of `"tibble"`, `"markdown"`, or `"context"`.
+#' @param ... Additional arguments passed to retrieval functions.
+#'
+#' @returns A function that takes a query string and returns results in the
+#'   requested format. The function has a `skald_retriever` attribute containing
+#'   a [SkaldRetriever] configuration object.
+#' @export
+#' @examplesIf interactive()
+#' retrieve <- skald_retriever(store, top_k = 5)
+#' retrieve("How do I filter rows?")
 skald_retriever <- function(
   store,
   model = NULL,
@@ -47,6 +67,19 @@ skald_retriever <- function(
   fn
 }
 
+#' Convert a retriever to a dsprrr module
+#'
+#' Wraps a retriever closure for use in dsprrr RAG pipelines.
+#'
+#' @param retriever Retriever function, such as one returned by
+#'   [skald_retriever()].
+#' @param signature dsprrr signature string.
+#' @param ... Additional arguments passed to `dsprrr::rag_module()`.
+#'
+#' @returns A dsprrr module object.
+#' @export
+#' @examplesIf interactive()
+#' module <- skald_as_dsprrr_module(skald_retriever(store))
 skald_as_dsprrr_module <- function(retriever, signature = "question -> context", ...) {
   .skald_check_installed("dsprrr", "Install dsprrr to create dsprrr modules.")
 
@@ -57,6 +90,26 @@ skald_as_dsprrr_module <- function(retriever, signature = "question -> context",
   )
 }
 
+#' Register a retrieval tool with ellmer
+#'
+#' Creates an ellmer tool that retrieves context from a skald or ragnar-backed
+#' store and registers it with an ellmer chat object.
+#'
+#' @param chat An ellmer chat object with a `register_tool()` method.
+#' @param store A [SkaldStore] or ragnar store object.
+#' @param model Optional [SkaldModel]. Required when `store` is a ragnar store.
+#' @param top_k Number of final results to return.
+#' @param candidate_k Number of first-stage candidates to rerank for ragnar
+#'   stores.
+#' @param store_description Human-readable store description for the tool
+#'   prompt.
+#' @param name Optional tool name. Defaults to `"skald_retrieve"`.
+#' @param title Optional human-readable tool title.
+#'
+#' @returns Invisibly, the ellmer tool object.
+#' @export
+#' @examplesIf interactive()
+#' skald_register_tool_retrieve(chat, store)
 skald_register_tool_retrieve <- function(
   chat,
   store,

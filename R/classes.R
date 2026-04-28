@@ -1,3 +1,23 @@
+#' PyLate-backed ColBERT model
+#'
+#' S7 class for a late-interaction model. Users normally create instances with
+#' [skald_model()].
+#'
+#' @param py Opaque Python model object, or `NULL` for a model specification that
+#'   can be rehydrated.
+#' @param model_name_or_path Hugging Face model id or local path.
+#' @param backend Backend name.
+#' @param device Optional torch device string.
+#' @param query_length Optional query token length.
+#' @param document_length Optional document token length.
+#' @param query_prefix Optional query prefix token.
+#' @param document_prefix Optional document prefix token.
+#' @param trust_remote_code Whether model loading may execute remote code.
+#' @param revision Optional model revision.
+#' @param local_files_only Whether model loading should avoid downloads.
+#' @param created_at Creation timestamp.
+#' @param metadata Additional R-side metadata.
+#' @export
 SkaldModel <- S7::new_class(
   "SkaldModel",
   package = "skald",
@@ -18,6 +38,18 @@ SkaldModel <- S7::new_class(
   )
 )
 
+#' Opaque late-interaction embeddings
+#'
+#' S7 class for query or document token embeddings returned by
+#' [skald_encode_queries()] and [skald_encode_documents()].
+#'
+#' @param py Opaque Python embedding object.
+#' @param kind Embedding kind, either `"query"` or `"document"`.
+#' @param n Number of encoded inputs.
+#' @param model_id Model label associated with the embeddings.
+#' @param backend Backend name.
+#' @param metadata Additional R-side metadata.
+#' @export
 SkaldEmbeddings <- S7::new_class(
   "SkaldEmbeddings",
   package = "skald",
@@ -31,6 +63,22 @@ SkaldEmbeddings <- S7::new_class(
   )
 )
 
+#' PLAID index handle
+#'
+#' S7 class for a PyLate PLAID index created with [skald_index_create()].
+#'
+#' @param py Opaque Python index object, or `NULL` when the index will be
+#'   reconnected lazily.
+#' @param index_folder Directory containing index files.
+#' @param index_name Index name within `index_folder`.
+#' @param backend Backend name.
+#' @param use_fast Whether the fast PLAID backend is requested.
+#' @param nbits Number of bits used for product quantization.
+#' @param n_ivf_probe Number of IVF cells to probe during retrieval.
+#' @param n_full_scores Number of candidates to fully score.
+#' @param metadata_path Path to JSON metadata for indexed rows.
+#' @param created_at Creation timestamp.
+#' @export
 SkaldIndex <- S7::new_class(
   "SkaldIndex",
   package = "skald",
@@ -48,6 +96,22 @@ SkaldIndex <- S7::new_class(
   )
 )
 
+#' Local skald store
+#'
+#' S7 class for a DuckDB metadata store paired with a PyLate PLAID index.
+#'
+#' @param location Store directory.
+#' @param metadata_db DuckDB metadata database path.
+#' @param index_folder Directory containing PLAID index files.
+#' @param index_name Index name within `index_folder`.
+#' @param model_spec Stored model specification.
+#' @param backend Backend name.
+#' @param read_only Whether the store connection is read-only.
+#' @param name Optional short store name.
+#' @param title Optional human-readable store title.
+#' @param text_template Glue template used to construct embedding text.
+#' @param created_at Creation timestamp.
+#' @export
 SkaldStore <- S7::new_class(
   "SkaldStore",
   package = "skald",
@@ -66,6 +130,17 @@ SkaldStore <- S7::new_class(
   )
 )
 
+#' Retriever configuration
+#'
+#' S7 class attached to retriever closures created by [skald_retriever()].
+#'
+#' @param store Store or first-stage retriever backing the closure.
+#' @param model Optional [SkaldModel] used for reranking first-stage results.
+#' @param top_k Number of final results to return.
+#' @param candidate_k Number of first-stage candidates to rerank.
+#' @param format Output format.
+#' @param metadata Additional R-side metadata.
+#' @export
 SkaldRetriever <- S7::new_class(
   "SkaldRetriever",
   package = "skald",

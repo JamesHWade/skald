@@ -11,7 +11,6 @@ License: MIT + file LICENSE
 URL: https://jameshwade.github.io/skald/, https://github.com/JamesHWade/skald
 BugReports: https://github.com/JamesHWade/skald/issues
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.3.0)
 Imports:
@@ -45,4 +44,5 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 SystemRequirements: Python (>= 3.10)
-RoxygenNote: 7.3.3
+Config/roxygen2/markdown: TRUE
+Config/roxygen2/version: 7.3.3.9000
