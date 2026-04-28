@@ -82,6 +82,26 @@ hits |>
 `late_rank`, orders by late-interaction score, and keeps first-stage order as
 the tie breaker.
 
+## Highlight relevant tokens
+
+ColBERT-style models keep token-level document embeddings. skald can expose the
+document tokens that best match a query and render a lightweight HTML highlight:
+
+```r
+token_scores <- skald_token_relevance(
+  model,
+  query = query,
+  documents = hits$text,
+  document_id = seq_len(nrow(hits))
+)
+
+skald_token_highlight(token_scores)
+```
+
+`score` is the raw best query-token similarity for each document token.
+`score_scaled` rescales those values for display, and `selected_by_query` marks
+tokens that were the MaxSim winner for at least one query token.
+
 ## Build a skald store
 
 `SkaldStore` keeps chunk metadata in DuckDB and the late-interaction index in

@@ -34,14 +34,18 @@
 \alias{skald_store_remove}
 \alias{skald_store_update}
 \alias{skald_torch_devices}
+\alias{skald_token_highlight}
+\alias{skald_token_relevance}
 \title{Skald API}
 \description{
 Public constructors, retrieval helpers, diagnostics, and adapters for
-late-interaction retrieval through Python PyLate.
+late-interaction retrieval through Python PyLate, including token-level
+relevance output for visual inspection.
 }
 \details{
 The v0.1 API wraps PyLate model, embedding, index, and retrieval objects while
 keeping Python objects opaque in R. Data-frame helpers accept tidy-selection
-columns and return tibbles.
+columns and return tibbles. Token relevance helpers expose MaxSim-style
+query/document token interactions and lightweight HTML highlights.
 }
 \keyword{internal}

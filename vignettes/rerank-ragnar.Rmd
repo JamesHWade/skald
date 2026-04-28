@@ -55,3 +55,25 @@ skald_retrieve_ragnar(
 ```
 
 The returned tibble keeps ragnar columns and adds `late_score` and `late_rank`.
+
+To inspect why a reranked chunk matched, compute token relevance for the
+candidate text and render an HTML highlight:
+
+```{r}
+reranked <- skald_retrieve_ragnar(
+  store,
+  model,
+  query = "How do I use dplyr filter?",
+  candidate_k = 40,
+  top_k = 6
+)
+
+token_scores <- skald_token_relevance(
+  model,
+  query = "How do I use dplyr filter?",
+  documents = reranked$text,
+  document_id = reranked$chunk_id
+)
+
+skald_token_highlight(token_scores)
+```

@@ -66,3 +66,22 @@ skald_rerank(
 
 `skald_rerank()` preserves input columns, appends `late_score` and `late_rank`,
 and sorts by late-interaction score.
+
+## Highlight tokens
+
+Use `skald_token_relevance()` when you want to inspect which document tokens
+carry the strongest late-interaction signal for a query.
+
+```{r}
+token_scores <- skald_token_relevance(
+  model,
+  query = "How do I subset rows?",
+  documents = candidates$text,
+  document_id = candidates$doc_id
+)
+
+token_scores |>
+  dplyr::select(document_id, token, score, best_query_token, selected_by_query)
+
+skald_token_highlight(token_scores)
+```

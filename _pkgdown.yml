@@ -84,12 +84,20 @@ reference:
   - skald_store_build_index
   - skald_store_update
   - skald_store_remove
-- title: Scoring, fusion, and adapters
-  desc: Compose retrieval results and connect skald to adjacent RAG tooling.
+- title: Scoring and fusion
+  desc: Compose retrieval results and score embeddings.
   contents:
   - skald_score_matrix
   - skald_score_pairwise
   - skald_fuse_ranks
+- title: Token-level relevance
+  desc: Inspect and highlight token-level late interactions.
+  contents:
+  - skald_token_relevance
+  - skald_token_highlight
+- title: Integrations
+  desc: Connect skald to adjacent RAG tooling.
+  contents:
   - skald_register_tool_retrieve
   - skald_as_dsprrr_module
 
