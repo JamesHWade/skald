@@ -6,7 +6,7 @@
 *.tar.gz
 *.Rcheck/
 README.html
-docs/dev/
+docs/
 inst/doc
 Meta
 doc

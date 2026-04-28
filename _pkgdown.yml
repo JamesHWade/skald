@@ -10,7 +10,7 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 development:
-  mode: auto
+  mode: unreleased
 
 home:
   title: Late-interaction retrieval and reranking for R
