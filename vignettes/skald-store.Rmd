@@ -1,0 +1,62 @@
+---
+title: "Skald stores"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Skald stores}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+`SkaldStore` combines a DuckDB metadata sidecar with a PyLate PLAID index.
+This gives R users a retrievable local store without treating ColBERT
+multi-vector embeddings as ordinary dense vectors.
+
+## Create and insert
+
+```{r}
+library(skald)
+
+model <- skald_model("lightonai/GTE-ModernColBERT-v1", device = "cpu")
+
+store <- skald_store_create(
+  "docs.skald",
+  model = model,
+  name = "docs",
+  title = "Documentation"
+)
+
+chunks <- tibble::tibble(
+  origin = "example.md",
+  start = c(1L, 80L),
+  end = c(79L, 140L),
+  context = c("Filtering rows", "Selecting columns"),
+  text = c(
+    "Use filter() with a logical expression to keep rows.",
+    "Use select() to keep or reorder columns."
+  )
+)
+
+skald_store_insert(store, chunks)
+```
+
+For chunks with `origin`, `start`, and `end`, skald creates stable string IDs
+from the source and character positions.
+
+## Build and retrieve
+
+```{r}
+skald_store_build_index(store)
+
+skald_retrieve(store, "How do I keep rows?", top_k = 5)
+```
+
+`late_score` is a MaxSim score. Higher values are better within a query, but
+the score is not a probability and is not suitable for universal thresholds.

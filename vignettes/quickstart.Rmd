@@ -1,0 +1,66 @@
+---
+title: "Quick start"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quick start}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+skald is an R interface to late-interaction retrieval. It wraps Python PyLate
+objects while exposing tidy R workflows for candidate reranking, local indexing,
+and retrieval.
+
+## Configure Python
+
+Call `skald_configure()` before Python is initialized if you need to control
+the active PyLate requirements.
+
+```{r}
+library(skald)
+
+skald_configure()
+skald_diagnostics()
+```
+
+## Create a model
+
+```{r}
+model <- skald_model("lightonai/GTE-ModernColBERT-v1", device = "cpu")
+```
+
+The returned `SkaldModel` stores enough R-side metadata to be printed,
+serialized, and rehydrated later. The Python model object stays opaque.
+
+## Rerank candidates
+
+```{r}
+candidates <- tibble::tibble(
+  doc_id = c("a", "b", "c"),
+  text = c(
+    "dplyr::filter() keeps rows that match logical conditions.",
+    "dplyr::select() keeps columns.",
+    "mutate() creates or changes columns."
+  )
+)
+
+skald_rerank(
+  candidates,
+  model,
+  query = "How do I subset rows?",
+  text = text,
+  id = doc_id,
+  top_k = 2
+)
+```
+
+`skald_rerank()` preserves input columns, appends `late_score` and `late_rank`,
+and sorts by late-interaction score.

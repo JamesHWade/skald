@@ -1,0 +1,8 @@
+^dev$
+^skald_.*\.tar\.gz$
+^\.Rcheck$
+^\.github$
+^_pkgdown\.yml$
+^docs$
+^README\.Rmd$
+^README\.html$

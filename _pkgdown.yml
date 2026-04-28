@@ -1,0 +1,104 @@
+url: https://jameshwade.github.io/skald/
+
+template:
+  bootstrap: 5
+  light-switch: true
+  bslib:
+    primary: "#2C5F5D"
+    base_font: {google: "Inter"}
+    heading_font: {google: "Inter"}
+    code_font: {google: "JetBrains Mono"}
+
+development:
+  mode: auto
+
+home:
+  title: Late-interaction retrieval and reranking for R
+  description: >
+    Tidy R interfaces to ColBERT-style late-interaction retrieval, reranking,
+    scoring, and indexing backed by Python PyLate.
+  sidebar:
+    structure: [links, license, community, citation, authors, dev]
+
+navbar:
+  structure:
+    left: [reference, articles, news]
+    right: [search, github, lightswitch]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Quick start
+        href: articles/quickstart.html
+      - text: Python environments
+        href: articles/python-environments.html
+      - text: Ragnar reranking
+        href: articles/rerank-ragnar.html
+      - text: Skald stores
+        href: articles/skald-store.html
+
+reference:
+- title: Package overview
+  desc: Package-level documentation.
+  contents:
+  - skald-package
+- title: Python setup and diagnostics
+  desc: Configure and inspect the Python backend used by skald.
+  contents:
+  - skald_configure
+  - skald_diagnostics
+  - skald_python_config
+  - skald_torch_devices
+  - skald_check_install
+- title: Models and encoding
+  desc: Create PyLate-backed models and opaque late-interaction embeddings.
+  contents:
+  - SkaldModel
+  - SkaldEmbeddings
+  - skald_model
+  - skald_encode_queries
+  - skald_encode_documents
+  - skald_encode_col
+- title: Reranking and retrieval
+  desc: Rerank candidates and retrieve from ragnar or skald stores.
+  contents:
+  - skald_rerank
+  - skald_retrieve_ragnar
+  - skald_retrieve
+  - skald_retriever
+  - SkaldRetriever
+- title: Indexes and stores
+  desc: Build and query low-level indexes or DuckDB-backed skald stores.
+  contents:
+  - SkaldIndex
+  - SkaldStore
+  - skald_index_create
+  - skald_index_add
+  - skald_index_retrieve
+  - skald_index_status
+  - skald_store_create
+  - skald_store_connect
+  - skald_store_insert
+  - skald_store_build_index
+  - skald_store_update
+  - skald_store_remove
+- title: Scoring, fusion, and adapters
+  desc: Compose retrieval results and connect skald to adjacent RAG tooling.
+  contents:
+  - skald_score_matrix
+  - skald_score_pairwise
+  - skald_fuse_ranks
+  - skald_register_tool_retrieve
+  - skald_as_dsprrr_module
+
+articles:
+- title: Get started
+  navbar: ~
+  contents:
+  - quickstart
+  - python-environments
+- title: Workflows
+  navbar: Workflows
+  contents:
+  - rerank-ragnar
+  - skald-store

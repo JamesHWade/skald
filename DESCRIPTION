@@ -1,0 +1,46 @@
+Package: skald
+Title: Late-Interaction Retrieval and Reranking for R
+Version: 0.1.0.9000
+Authors@R:
+    person("James", "Wade", email = "github@jameshwade.com", role = c("aut", "cre"))
+Description: Provides tidy R interfaces to ColBERT-style late-interaction
+    retrieval, reranking, scoring, and indexing. Wraps the Python PyLate
+    library via reticulate and integrates with ragnar knowledge stores for
+    retrieval-augmented generation workflows.
+License: MIT + file LICENSE
+URL: https://jameshwade.github.io/skald/, https://github.com/JamesHWade/skald
+BugReports: https://github.com/JamesHWade/skald/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.3.0)
+Imports:
+    cli,
+    DBI,
+    dplyr,
+    duckdb,
+    fs,
+    glue,
+    jsonlite,
+    openssl,
+    rlang (>= 1.1.0),
+    reticulate (>= 1.42.0),
+    S7,
+    tibble,
+    tidyr,
+    tidyselect,
+    vctrs
+Suggests:
+    ragnar,
+    ellmer,
+    dsprrr,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    pkgdown,
+    arrow,
+    mirai,
+    carrier
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+SystemRequirements: Python (>= 3.10)

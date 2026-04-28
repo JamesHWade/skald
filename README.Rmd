@@ -1,0 +1,152 @@
+---
+output:
+  github_document:
+    md_extensions: -smart
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# skald
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/JamesHWade/skald/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JamesHWade/skald/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/JamesHWade/skald/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/JamesHWade/skald/actions/workflows/pkgdown.yaml)
+<!-- badges: end -->
+
+skald provides tidy R interfaces to ColBERT-style late-interaction
+retrieval, reranking, scoring, and indexing. The first backend wraps
+[PyLate](https://lightonai.github.io/pylate/) through
+[reticulate](https://rstudio.github.io/reticulate/), while keeping model,
+index, and embedding objects opaque in R.
+
+The package boundary is intentionally narrow:
+
+- ragnar ingests, chunks, stores, and performs first-stage retrieval.
+- skald encodes, reranks, scores, indexes, and retrieves with late interaction.
+- dsprrr can compose retrievers into declarative RAG pipelines.
+
+## Installation
+
+You can install the development version from GitHub:
+
+```r
+# install.packages("pak")
+pak::pak("JamesHWade/skald")
+```
+
+skald uses reticulate's Python requirement system. Configure PyLate before
+Python is initialized when you need a specific environment:
+
+```r
+library(skald)
+
+skald_configure()
+skald_diagnostics()
+```
+
+## Rerank ragnar results
+
+The most common workflow is to use ragnar for candidate generation and skald
+for late-interaction reranking.
+
+```r
+library(ragnar)
+library(skald)
+
+model <- skald_model("lightonai/GTE-ModernColBERT-v1", device = "cpu")
+
+query <- "How can I subset a dataframe with a logical vector?"
+
+hits <- ragnar_retrieve(store, query, top_k = 50)
+
+hits |>
+  skald_rerank(
+    model,
+    query = query,
+    text = text,
+    id = c(origin, doc_id, chunk_id),
+    top_k = 5
+  )
+```
+
+`skald_rerank()` preserves the original columns, appends `late_score` and
+`late_rank`, orders by late-interaction score, and keeps first-stage order as
+the tie breaker.
+
+## Build a skald store
+
+`SkaldStore` keeps chunk metadata in DuckDB and the late-interaction index in
+PyLate's PLAID format.
+
+```r
+chunks <- "https://r4ds.hadley.nz/data-transform.html" |>
+  ragnar::read_as_markdown() |>
+  ragnar::markdown_chunk()
+
+store <- skald_store_create(
+  "r4ds.skald",
+  model = model,
+  name = "r4ds",
+  title = "R for Data Science"
+)
+
+skald_store_insert(store, chunks)
+skald_store_build_index(store)
+
+skald_retrieve(store, "How do I filter rows?", top_k = 5)
+```
+
+Chunk identifiers are stable and string-valued. For ragnar markdown chunks,
+they are derived from the source origin and character positions rather than
+from ragnar's auto-incrementing store IDs.
+
+## Standalone PyLate index
+
+skald can also manage a low-level PLAID index without ragnar.
+
+```r
+docs <- tibble::tibble(
+  doc_id = c("1", "2", "3"),
+  text = c(
+    "ColBERT keeps token-level embeddings for fine-grained retrieval.",
+    "PLAID compresses token vectors for scalable search.",
+    "PyLate trains and retrieves with late-interaction models."
+  )
+)
+
+index <- skald_index_create("demo-index", overwrite = TRUE)
+
+index <- skald_index_add(
+  index,
+  model,
+  docs,
+  id = doc_id,
+  text = text
+)
+
+skald_index_retrieve(
+  index,
+  model,
+  query = "What library supports ColBERT retrieval?",
+  top_k = 3
+)
+```
+
+## Score semantics
+
+Late-interaction scores are query-relative MaxSim scores. Higher scores are
+better, but they are not probabilities, are not bounded to `[0, 1]`, and should
+not be compared against universal thresholds.
+
+## Design notes
+
+skald follows tidyverse package conventions where they help retrieval workflows:
+data-frame APIs use tidy evaluation, return tibbles, preserve columns, and keep
+Python objects out of user-visible columns unless explicitly requested.

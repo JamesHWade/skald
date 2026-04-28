@@ -1,0 +1,57 @@
+---
+title: "Rerank ragnar results"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Rerank ragnar results}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+ragnar is the natural first-stage retriever for many RAG workflows. skald is
+designed to sit after ragnar, reranking the candidate rows with a late-
+interaction model.
+
+```{r}
+library(ragnar)
+library(skald)
+
+model <- skald_model("lightonai/GTE-ModernColBERT-v1", device = "cpu")
+
+query <- "How can I join two tibbles?"
+
+hits <- ragnar_retrieve(store, query, top_k = 50)
+
+hits |>
+  skald_rerank(
+    model,
+    query = query,
+    text = text,
+    id = c(origin, doc_id, chunk_id),
+    top_k = 8
+  )
+```
+
+`ragnar_retrieve()` names its second argument `text`, so pass the query string
+positionally. `skald_retrieve_ragnar()` handles that detail for one-call
+retrieval plus reranking:
+
+```{r}
+skald_retrieve_ragnar(
+  store,
+  model,
+  query = "How do I use dplyr filter?",
+  candidate_k = 40,
+  top_k = 6,
+  filter = area == "data-transform"
+)
+```
+
+The returned tibble keeps ragnar columns and adds `late_score` and `late_rank`.
