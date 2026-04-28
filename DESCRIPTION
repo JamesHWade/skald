@@ -44,3 +44,4 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 SystemRequirements: Python (>= 3.10)
+RoxygenNote: 7.3.3

@@ -105,13 +105,45 @@ skald_python_config <- function() {
   tibble::tibble(
     field = c("python", "version", "numpy", "required_module", "available"),
     value = c(
-      cfg$python %||% NA_character_,
-      cfg$version %||% NA_character_,
-      cfg$numpy %||% NA_character_,
-      cfg$required_module %||% NA_character_,
+      .skald_python_config_value(cfg$python),
+      .skald_python_config_value(cfg$version),
+      .skald_python_config_value(cfg$numpy),
+      .skald_python_config_value(cfg$required_module),
       as.character(isTRUE(cfg$available))
     )
   )
+}
+
+.skald_python_config_value <- function(x) {
+  if (is.null(x)) {
+    return(NA_character_)
+  }
+
+  if (inherits(x, c("numeric_version", "package_version"))) {
+    return(as.character(x))
+  }
+
+  if (is.list(x)) {
+    if (!is.null(x$version) && !is.null(x$path)) {
+      return(sprintf(
+        "%s (%s)",
+        .skald_python_config_value(x$version),
+        .skald_python_config_value(x$path)
+      ))
+    }
+
+    parts <- vapply(x, .skald_python_config_value, character(1))
+    return(paste(parts, collapse = "; "))
+  }
+
+  x <- as.character(x)
+  if (length(x) == 0) {
+    NA_character_
+  } else if (length(x) == 1) {
+    x
+  } else {
+    paste(x, collapse = ", ")
+  }
 }
 
 skald_torch_devices <- function() {
