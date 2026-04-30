@@ -1,6 +1,8 @@
 
 # skald
 
+<img src="man/figures/logo.png" align="right" height="139" alt="skald hex sticker" />
+
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/JamesHWade/skald/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JamesHWade/skald/actions/workflows/R-CMD-check.yaml)
